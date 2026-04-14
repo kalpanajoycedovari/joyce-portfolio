@@ -1,7 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { motion, useInView } from 'framer-motion'
+import Link from 'next/link'
 
-const projects = [
+export const allProjects = [
   {
     title: 'ScamCheck Agent',
     subtitle: 'Edge AI Fraud Detection',
@@ -11,9 +13,10 @@ const projects = [
     live: '#',
     featured: true,
     year: '2025',
+    emoji: '🛡️',
   },
   {
-    title: 'Solite\'s Corner',
+    title: "Solite's Corner",
     subtitle: 'Invite-only Social Platform',
     desc: 'A cozy invite-only social space built with vanilla JS and Firebase. Full auth, real-time posts, notifications, messages, mood filters, and profile management.',
     tags: ['Firebase', 'JavaScript', 'GitHub Pages', 'Firestore'],
@@ -21,6 +24,7 @@ const projects = [
     live: 'https://kalpanajoycedovari.github.io/My-Website/',
     featured: true,
     year: '2024',
+    emoji: '🌿',
   },
   {
     title: 'AI Resume Screener',
@@ -31,6 +35,7 @@ const projects = [
     live: 'https://ai-resume-screener-x5c1.onrender.com',
     featured: true,
     year: '2024',
+    emoji: '📄',
   },
   {
     title: 'CaptionCook',
@@ -40,6 +45,7 @@ const projects = [
     github: 'https://github.com/kalpanajoycedovari',
     featured: false,
     year: '2025',
+    emoji: '✍️',
   },
   {
     title: 'ScamScan',
@@ -49,6 +55,7 @@ const projects = [
     github: 'https://github.com/kalpanajoycedovari/scamscan',
     featured: false,
     year: '2024',
+    emoji: '🔍',
   },
   {
     title: 'JoBo OCR Journal',
@@ -58,6 +65,7 @@ const projects = [
     github: 'https://github.com/kalpanajoycedovari',
     featured: false,
     year: '2024',
+    emoji: '📖',
   },
   {
     title: 'Speech Recognition Pipeline',
@@ -67,6 +75,7 @@ const projects = [
     github: 'https://github.com/kalpanajoycedovari',
     featured: false,
     year: '2024',
+    emoji: '🎙️',
   },
   {
     title: 'UK Job Market Dashboard',
@@ -76,190 +85,138 @@ const projects = [
     github: 'https://github.com/kalpanajoycedovari',
     featured: false,
     year: '2024',
+    emoji: '📊',
   },
 ]
 
-export default function Projects() {
-  const [filter, setFilter] = useState<'all' | 'featured'>('all')
-  const shown = filter === 'featured' ? projects.filter(p => p.featured) : projects
-
-  return (
-    <section id="projects" style={{ padding: '120px 8vw', position: 'relative', zIndex: 1 }}>
-      <div className="section-divider" style={{ marginBottom: '80px' }} />
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '60px', flexWrap: 'wrap', gap: '24px' }}>
-        <div>
-          <p style={{
-            fontSize: '0.65rem',
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-            color: 'var(--gold)',
-            marginBottom: '12px',
-            fontFamily: "'Jost', sans-serif",
-          }}>03 — Portfolio</p>
-          <h2 style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-            fontWeight: 300,
-            lineHeight: 1.1,
-            color: 'var(--cream)',
-          }}>
-            Selected{' '}
-            <span className="gold-text">Projects</span>
-          </h2>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {(['all', 'featured'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              style={{
-                padding: '8px 20px',
-                background: filter === f ? 'rgba(201,168,76,0.12)' : 'transparent',
-                border: `1px solid ${filter === f ? 'var(--gold)' : 'rgba(201,168,76,0.2)'}`,
-                color: filter === f ? 'var(--gold)' : 'var(--text-muted)',
-                fontSize: '0.65rem',
-                letterSpacing: '0.15em',
-                textTransform: 'capitalize',
-                cursor: 'pointer',
-                fontFamily: "'Jost', sans-serif",
-                transition: 'all 0.3s ease',
-              }}>
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Featured row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '20px' }} className="projects-grid">
-        {shown.slice(0, 3).map((p, i) => (
-          <ProjectCard key={i} project={p} large />
-        ))}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }} className="projects-grid-sm">
-        {shown.slice(3).map((p, i) => (
-          <ProjectCard key={i} project={p} large={false} />
-        ))}
-      </div>
-
-      <style>{`
-        @media (max-width: 1100px) {
-          .projects-grid { grid-template-columns: 1fr 1fr !important; }
-          .projects-grid-sm { grid-template-columns: 1fr 1fr !important; }
-        }
-        @media (max-width: 640px) {
-          .projects-grid { grid-template-columns: 1fr !important; }
-          .projects-grid-sm { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </section>
-  )
-}
-
-function ProjectCard({ project, large }: { project: typeof projects[0], large: boolean }) {
+function ProjectCard({ project, index, showAll = false }: { project: typeof allProjects[0], index: number, showAll?: boolean }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-80px' })
   const [hovered, setHovered] = useState(false)
+
   return (
-    <div
-      className="luxury-card"
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 60 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.7, delay: index * 0.12, ease: [0.23, 1, 0.32, 1] }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ padding: large ? '28px' : '22px' }}
-    >
-      {/* Top bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <span style={{
-          fontSize: '0.6rem',
-          letterSpacing: '0.2em',
-          color: 'var(--gold)',
-          textTransform: 'uppercase',
-          opacity: 0.7,
-        }}>{project.year}</span>
-        {project.featured && (
-          <span style={{
-            fontSize: '0.55rem',
-            padding: '2px 8px',
-            border: '1px solid rgba(201,168,76,0.3)',
-            color: 'var(--gold)',
-            letterSpacing: '0.15em',
-            textTransform: 'uppercase',
-          }}>Featured</span>
-        )}
-      </div>
-
-      {/* Decorative top corner */}
-      <div style={{
-        position: 'absolute',
-        top: 0, right: 0,
-        width: '50px', height: '50px',
+      style={{
+        background: 'var(--bg-card)',
+        border: `1px solid ${hovered ? 'rgba(201,168,76,0.4)' : 'var(--border)'}`,
+        padding: '36px',
+        position: 'relative',
         overflow: 'hidden',
+        cursor: 'pointer',
+        transition: 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+        transform: hovered ? 'translateY(-12px) scale(1.01)' : 'translateY(0) scale(1)',
+        boxShadow: hovered
+          ? '0 32px 80px rgba(139,105,20,0.15), 0 8px 24px rgba(139,105,20,0.1)'
+          : '0 4px 24px rgba(139,105,20,0.06)',
+        animation: `cardFloat ${4 + index * 0.3}s ease-in-out infinite`,
+        animationDelay: `${index * 0.5}s`,
+      }}
+    >
+      {/* Top gradient line */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
+        background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
         opacity: hovered ? 1 : 0,
-        transition: 'opacity 0.3s ease',
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '-1px', right: '-1px',
-          width: 0, height: 0,
-          borderStyle: 'solid',
-          borderWidth: '0 50px 50px 0',
-          borderColor: `transparent rgba(201,168,76,0.15) transparent transparent`,
-        }} />
+        transition: 'opacity 0.4s ease',
+      }} />
+
+      {/* Corner decoration */}
+      <div style={{
+        position: 'absolute', top: 0, right: 0,
+        width: 0, height: 0,
+        borderStyle: 'solid',
+        borderWidth: '0 40px 40px 0',
+        borderColor: `transparent rgba(201,168,76,${hovered ? '0.15' : '0.06'}) transparent transparent`,
+        transition: 'all 0.4s ease',
+      }} />
+
+      {/* Background glow */}
+      <div style={{
+        position: 'absolute', top: '-50%', right: '-50%',
+        width: '200px', height: '200px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%)',
+        opacity: hovered ? 1 : 0,
+        transition: 'opacity 0.5s ease',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+        <span style={{ fontSize: '2rem' }}>{project.emoji}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+          <span style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dark)', textTransform: 'uppercase', opacity: 0.7 }}>{project.year}</span>
+          {project.featured && (
+            <span style={{ fontSize: '0.55rem', padding: '2px 8px', border: '1px solid rgba(201,168,76,0.4)', background: 'rgba(201,168,76,0.08)', color: 'var(--gold-dark)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Featured</span>
+          )}
+        </div>
       </div>
 
-      <h3 style={{
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: large ? '1.35rem' : '1.1rem',
-        fontWeight: 500,
-        color: 'var(--cream)',
-        marginBottom: '4px',
-        lineHeight: 1.2,
-      }}>{project.title}</h3>
-      <p style={{
-        fontSize: '0.7rem',
-        color: 'var(--gold)',
-        marginBottom: '12px',
-        letterSpacing: '0.08em',
-        opacity: 0.8,
-      }}>{project.subtitle}</p>
-      <p style={{
-        fontSize: '0.83rem',
-        color: 'var(--text-muted)',
-        lineHeight: 1.65,
-        marginBottom: '18px',
-      }}>{project.desc}</p>
+      <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 500, color: 'var(--ink)', marginBottom: '4px', lineHeight: 1.2 }}>
+        {project.title}
+      </h3>
+      <p style={{ fontSize: '0.72rem', color: 'var(--gold-dark)', marginBottom: '14px', letterSpacing: '0.08em', opacity: 0.9 }}>{project.subtitle}</p>
+      <p style={{ fontSize: '0.87rem', color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>{project.desc}</p>
 
-      {/* Tags */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '24px' }}>
         {project.tags.map(tag => (
           <span key={tag} className="gold-tag">{tag}</span>
         ))}
       </div>
 
-      {/* Links */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
         <a href={project.github} target="_blank" rel="noreferrer"
-          style={{
-            fontSize: '0.65rem',
-            letterSpacing: '0.15em',
-            textTransform: 'uppercase',
-            color: 'var(--text-muted)',
-            textDecoration: 'none',
-            transition: 'color 0.3s ease',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+          onClick={e => e.stopPropagation()}
+          style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.3s ease' }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold-dark)')}
           onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
         >GitHub ↗</a>
         {project.live && (
           <a href={project.live} target="_blank" rel="noreferrer"
-            style={{
-              fontSize: '0.65rem',
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              color: 'var(--gold)',
-              textDecoration: 'none',
-              opacity: 0.8,
-            }}
+            onClick={e => e.stopPropagation()}
+            style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--gold-dark)', textDecoration: 'none', opacity: 0.9 }}
           >Live Demo ↗</a>
         )}
       </div>
-    </div>
+    </motion.div>
+  )
+}
+
+export default function Projects({ limit }: { limit?: number }) {
+  const projects = limit ? allProjects.slice(0, limit) : allProjects
+  const titleRef = useRef(null)
+  const titleInView = useInView(titleRef, { once: true })
+
+  return (
+    <section id="projects" style={{ padding: '120px 8vw', position: 'relative', zIndex: 1, background: 'var(--bg)' }}>
+      <div className="section-divider" style={{ marginBottom: '80px' }} />
+
+      <motion.div ref={titleRef} initial={{ opacity: 0, y: 30 }} animate={titleInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7 }}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '60px', flexWrap: 'wrap', gap: '24px' }}>
+        <div>
+          <p style={{ fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--gold-dark)', marginBottom: '12px', fontFamily: "'Jost', sans-serif" }}>
+            Portfolio
+          </p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 300, color: 'var(--ink)', lineHeight: 1.1 }}>
+            Selected <span className="gold-text">Projects</span>
+          </h2>
+        </div>
+        {limit && (
+          <Link href="/projects" className="btn-gold">View All Projects →</Link>
+        )}
+      </motion.div>
+
+      {/* Single column stacked cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '800px', margin: '0 auto' }}>
+        {projects.map((p, i) => (
+          <ProjectCard key={i} project={p} index={i} />
+        ))}
+      </div>
+    </section>
   )
 }
